@@ -1,0 +1,4 @@
+<Simulation version="4.6.0">
+   <PythonScript Type="PythonScript">Simulation/example_dumper.py</PythonScript>
+   <Resource Type="Python">Simulation/example_dumperSteppables.py</Resource>
+</Simulation>
