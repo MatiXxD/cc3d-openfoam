@@ -204,3 +204,6 @@ pyrightconfig.json
 *.exe
 *.out
 *.app
+
+# cc3d
+_settings.sqlite
