@@ -1,0 +1,4 @@
+<Simulation version="4.6.0">
+    <PythonScript Type="PythonScript">Simulation/cc3d_integration.py</PythonScript>
+    <Resource Type="Python">Simulation/cc3d_integration_steppables.py</Resource>
+</Simulation>
