@@ -25,8 +25,8 @@ class GrowthSteppable(SteppableBasePy):
 
 class PixelTrackerSteppable(SteppableBasePy):
     cpp_source = "../cpp_example/main.cpp"          # путь к бинарю (для примера простой cpp код)
-    dumpfile_cc3d = "/home/softmatter/Documents/CC3D-OF/cc3d-openfoam/cc3d/cc3d_integration/dumps/dump_cc3d.txt"    # куда будем писать границу из cc3d
-    dumpfile_cpp = "/home/softmatter/Documents/CC3D-OF/cc3d-openfoam/cc3d/cc3d_integration/dumps/dump_cpp.txt"      # имя файла, куда будет записан результат обработки
+    dumpfile_cc3d = "/home/softmatter/Documents/CC3D-OF/MAIN/cc3d/cc3d_integration/dumps/dump_cc3d.txt"    # куда будем писать границу из cc3d
+    dumpfile_cpp = "/home/softmatter/Documents/CC3D-OF/MAIN/cc3d/cc3d_integration/dumps/dump_cpp.txt"      # имя файла, куда будет записан результат обработки
     dump_time = 100
 
     def __init__(self,frequency=1):
@@ -43,7 +43,8 @@ class PixelTrackerSteppable(SteppableBasePy):
         self._calc_boundary_stub(mcs)
 
         # 2. вызываем внешний процесс (openfoam) для обработки границы
-        #subprocess.run([self.cpp_source, self.dumpfile_cc3d, self.dumpfile_cpp])
+        # subprocess.run([self.cpp_source, self.dumpfile_cc3d, self.dumpfile_cpp])
+        # self.run_openFoam()
 
         # 3. читаем результат из файла, который был запсан openfoam + обновляем клетки
         self._update_cells_stub()
@@ -62,6 +63,9 @@ class PixelTrackerSteppable(SteppableBasePy):
                         f.write(f"{x} {y} {z} {cell_type}\n")
             f.write(f"\n\n\n\n\n")
         create_mesh_for_OF(mcs)
+
+    def run_openFoam(self):
+        return
 
 
     def _update_cells_stub(self):

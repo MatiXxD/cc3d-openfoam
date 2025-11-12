@@ -221,7 +221,7 @@ def create_3dmatrix(data, nx, ny, nz):
 
 
 def create_mesh_for_OF(time):
-    file_path = "/home/softmatter/Documents/CC3D-OF/cc3d-openfoam/cc3d/cc3d_integration/dumps/dump_cc3d.txt"  # замените на свой путь к файлу
+    file_path = "/home/softmatter/Documents/CC3D-OF/MAIN/cc3d/cc3d_integration/dumps/dump_cc3d.txt"  # замените на свой путь к файлу
 
     with open(file_path, 'r') as f:
         skip_first_steps(f, num_skip =0)  # 0, если сразу хотим читать первый блок
@@ -230,19 +230,19 @@ def create_mesh_for_OF(time):
         matrix = create_3dmatrix(block_data, nx, ny, nz)
 
 
-        with open("/home/softmatter/Documents/CC3D-OF/cc3d-openfoam/cc3d/cc3d_integration/dumps/mesh.stl", "w") as mesh_stl:
+        with open("/home/softmatter/Documents/CC3D-OF/MAIN/cc3d/cc3d_integration/OpenFoamProject/constant/triSurface/sphere" + str(time) +".stl", "w") as mesh_stl:
             mesh_stl.write("solid Visualization Toolkit generated SLA File\n")
             make_stl_file(mesh_stl, matrix, nx, ny, nz)
             mesh_stl.write("endsolid")
 
 
 
-    reader = pv.get_reader("/home/softmatter/Documents/CC3D-OF/cc3d-openfoam/cc3d/cc3d_integration/dumps/mesh.stl")
-    mesh = reader.read()
-
-    print(mesh)
-    normals = mesh.cell_normals
-    centers = mesh.cell_centers().points
+    # reader = pv.get_reader("/home/softmatter/Documents/CC3D-OF/MAIN/cc3d/cc3d_integration/OpenFoamProject/constant/triSurface/sphere.stl")
+    # mesh = reader.read()
+    #
+    # print(mesh)
+    # normals = mesh.cell_normals
+    # centers = mesh.cell_centers().points
 
 
 
