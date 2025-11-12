@@ -12,19 +12,17 @@ class ConstraintInitializerSteppable(SteppableBasePy):
             cell.targetVolume = 25
             cell.lambdaVolume = 2.0
             
-        
-        
+
 class GrowthSteppable(SteppableBasePy):
     def __init__(self,frequency=1):
         SteppableBasePy.__init__(self, frequency)
-
     def step(self, mcs):
         for cell in self.cell_list:
             cell.targetVolume += 1        
             
             
 class DumpSteppable(SteppableBasePy):
-    dir = "/home/ilya/Work/example_dumper/dumps/"
+    dir = "/home/softmatter/Documents/CC3D-OF/cc3d-openfoam/cc3d/example_dumper/Simulation/dumps/"
     basename = "dump"
     dump_time = 100
 

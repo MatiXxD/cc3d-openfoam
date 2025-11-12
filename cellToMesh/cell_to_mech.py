@@ -228,10 +228,10 @@ def create_3dmatrix(data, nx, ny, nz):
 
 
 if __name__ == "__main__":
-    file_path = "/run/media/softmatter/4a26afd4-6bf4-401e-bd57-6138470f20c6/CellMesh/dump_1749035356.dat"  # замените на свой путь к файлу
+    file_path = "/home/softmatter/Documents/CC3D-OF/cc3d-openfoam/cc3d/cc3d_integration/dumps/dump_cc3d.txt"  # замените на свой путь к файлу
 
     with open(file_path, 'r') as f:
-        skip_first_steps(f, num_skip =3)  # 0, если сразу хотим читать первый блок
+        skip_first_steps(f, num_skip =0)  # 0, если сразу хотим читать первый блок
         block_data, border_voxels, nxyz = read_block_lines(f)
         nx, ny, nz = nxyz[0], nxyz[1], nxyz[2]
         matrix = create_3dmatrix(block_data, nx, ny, nz)
@@ -241,9 +241,6 @@ if __name__ == "__main__":
             mesh_stl.write("solid Visualization Toolkit generated SLA File\n")
             make_stl_file(mesh_stl, matrix, nx, ny, nz)
             mesh_stl.write("endsolid")
-
-    plot_matrix(matrix)
-    import pyvista as pv
 
 
     reader = pv.get_reader("mesh.stl")
@@ -261,6 +258,6 @@ if __name__ == "__main__":
 
     plotter.add_axes()
     plotter.show_grid()
-    plotter.show()
+    plotter.save_graphic("mesh_view" + ".pdf")
 
 
