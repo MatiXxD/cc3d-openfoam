@@ -16,7 +16,7 @@ def configure_simulation():
 
     # Basic properties of CPM (GGH) algorithm
     PottsElmnt.ElementCC3D("Dimensions",{"x":"64","y":"64","z":"64"})
-    PottsElmnt.ElementCC3D("Steps",{},"10000")
+    PottsElmnt.ElementCC3D("Steps",{},"510")
     PottsElmnt.ElementCC3D("Temperature",{},"10.0")
     PottsElmnt.ElementCC3D("NeighborOrder",{},"1")
 

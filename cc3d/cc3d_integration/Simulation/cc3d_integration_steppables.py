@@ -4,6 +4,8 @@ import time
 import subprocess
 import cell_to_mech
 from cell_to_mech import create_mesh_for_OF
+import clear_openFoam_folder
+from clear_openFoam_folder import copy_and_clean
 
 class ConstraintInitializerSteppable(SteppableBasePy):
     def __init__(self,frequency=1):
@@ -27,6 +29,7 @@ class PixelTrackerSteppable(SteppableBasePy):
     cpp_source = "../cpp_example/main.cpp"          # путь к бинарю (для примера простой cpp код)
     dumpfile_cc3d = "/home/softmatter/Documents/CC3D-OF/MAIN/cc3d/cc3d_integration/dumps/dump_cc3d.txt"    # куда будем писать границу из cc3d
     dumpfile_cpp = "/home/softmatter/Documents/CC3D-OF/MAIN/cc3d/cc3d_integration/dumps/dump_cpp.txt"      # имя файла, куда будет записан результат обработки
+
     dump_time = 100
 
     def __init__(self,frequency=1):
@@ -42,7 +45,17 @@ class PixelTrackerSteppable(SteppableBasePy):
         # 1. получаем границу клеток + записываем в stl формат
         self._calc_boundary_stub(mcs)
 
-        # 2. вызываем внешний процесс (openfoam) для обработки границы
+        # blockMesh
+        case_dir = "../OpenFoamProject"
+        subprocess.run(["blockMesh", "-case", case_dir], check=True)
+        #
+        subprocess.run(["snappyHexMesh", "-overwrite", "-case", case_dir], check=True)
+        subprocess.run(["pimpleFoamScalar", "-case", case_dir], check=True)
+        copy_and_clean(mcs)
+
+
+
+
         # subprocess.run([self.cpp_source, self.dumpfile_cc3d, self.dumpfile_cpp])
         # self.run_openFoam()
 
