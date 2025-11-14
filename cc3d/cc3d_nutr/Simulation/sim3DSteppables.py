@@ -1,6 +1,10 @@
 import numpy as np
 from cc3d.core.PySteppables import *
-
+import subprocess
+import cell_to_mech
+from cell_to_mech import create_mesh_for_OF
+import clear_openFoam_folder
+from clear_openFoam_folder import copy_and_clean
 
 class ConstraintInitializerSteppable(SteppableBasePy):
     def __init__(self, frequency=1, params={}):
@@ -24,6 +28,7 @@ class ConstraintInitializerSteppable(SteppableBasePy):
 
 
 class GrowthSteppable(SteppableBasePy):
+
     def __init__(self, frequency=1, sim_name="default", params={}):
         SteppableBasePy.__init__(self, frequency)
         self.filename = sim_name
@@ -40,6 +45,16 @@ class GrowthSteppable(SteppableBasePy):
         self.DUMP_TIME = params["dump_time"]
         self.TIME_TO_DEATH = params["timeToDeath"]
 
+
+        self.cpp_source = "../cpp_example/main.cpp"          # путь к бинарю (для примера простой cpp код)
+        self.dumpfile_cc3d = "dumps/dump_cc3d.txt"    # куда будем писать границу из cc3d
+        self.dumpfile_nutr = "dumps/dump_nutr.txt"    # куда будем писать концентрацию нутр
+        self.dumpfile_cpp = "dumps/dump_cpp.txt"      # имя файла, куда будет записан результат обработки
+
+
+
+
+
     def get_surface(self, vol):
         return self.RATIO * (4 * np.pi * (3 * vol / (4.0 * np.pi)) ** (2.0 / 3.0))
 
@@ -48,20 +63,32 @@ class GrowthSteppable(SteppableBasePy):
         with open(self.filename, "w") as f:
             pass
 
-    def print_step(self, step):
-        with open(self.filename, "a") as f:
-            f.write(f"TIMESTEP {step}\n")
-            f.write(f"x: 0 {self.dim.x}\n")
-            f.write(f"y: 0 {self.dim.y}\n")
-            f.write(f"z: 0 {self.dim.z}\n")
-            f.write(f"cell_id cell_type pixel_x pixel_y pixel_z\n")
 
-            for cell in self.cell_list:
-                pixel_list = self.get_cell_pixel_list(cell)
-                for pixel_tracker_data in pixel_list:
-                    f.write(
-                        f"{cell.id}  {cell.type} {pixel_tracker_data.pixel.x} {pixel_tracker_data.pixel.y} {pixel_tracker_data.pixel.z}\n"
-                    )
+    def _calc_boundary_stub(self, mcs):
+        with open(self.dumpfile_cc3d, "w") as f:
+            f.write(f"TIMESTEP: {100}\n")
+            f.write(f"FORMAT: x y z type\n")
+            for x in range(self.dim.x):
+                for y in range(self.dim.y):
+                    for z in range(self.dim.z):
+                        cell_type = 0
+                        cell = self.cell_field[x, y, z]
+                        if cell:
+                            cell_type = cell.type
+                        f.write(f"{x} {y} {z} {cell_type}\n")
+            f.write(f"\n\n\n\n\n")
+        create_mesh_for_OF(mcs)
+
+    def _write_nutr_filed(self, mcs, nutrField):
+        with open(self.dumpfile_nutr, "w") as f:
+            f.write(f"TIMESTEP: {100}\n")
+            f.write(f"FORMAT: x y z C_nutr\n")
+            for xc in range(self.dim.x):
+                for yc in range(self.dim.y):
+                    for zc in range(self.dim.z):
+                        nutrValue = nutrField[xc, yc, zc]
+                        f.write(f"{xc} {yc} {zc} {nutrValue}\n")
+            f.write(f"\n\n\n\n\n")
 
     def step(self, mcs):
         secretor = self.get_field_secretor("nutr")
@@ -70,7 +97,8 @@ class GrowthSteppable(SteppableBasePy):
         # print("TEST", mcs)
         if mcs != 0 and (mcs % self.DUMP_TIME) == 0:
             print("STEP:", mcs)
-            self.print_step(mcs)
+
+
 
         for cell in self.cell_list:
             if cell.type in [self.CELL, self.CELLGROW, self.CELLHYPO]:
@@ -111,6 +139,28 @@ class GrowthSteppable(SteppableBasePy):
                 else:
                     cell.targetVolume -= self.DELTA_DEATH
                     cell.targetSurface = self.get_surface(cell.targetVolume)
+
+        # OpenFoamPart---OpenFoamPart---OpenFoamPart---OpenFoamPart---OpenFoamPart---OpenFoamPart---OpenFoamPart---
+        # OpenFoamPart---OpenFoamPart---OpenFoamPart---OpenFoamPart---OpenFoamPart---OpenFoamPart---OpenFoamPart---
+        # OpenFoamPart---OpenFoamPart---OpenFoamPart---OpenFoamPart---OpenFoamPart---OpenFoamPart---OpenFoamPart---
+        # OpenFoamPart---OpenFoamPart---OpenFoamPart---OpenFoamPart---OpenFoamPart---OpenFoamPart---OpenFoamPart---
+
+        if mcs % self.DUMP_TIME == 0:
+            # blockMesh
+            self._calc_boundary_stub(mcs)
+            self._write_nutr_filed(mcs, nutrField)
+            # TO DO:
+            # write file for nutr_value transformation for OF
+            # OF data nutr to CC3D
+
+
+            # rabotaet no nado ustanovit openfoam.
+            # case_dir = "../OpenFoamProject"
+            # subprocess.run(["blockMesh", "-case", case_dir], check=True)
+            #
+            # subprocess.run(["snappyHexMesh", "-overwrite", "-case", case_dir], check=True)
+            # subprocess.run(["pimpleFoamScalar", "-case", case_dir], check=True)
+            # copy_and_clean(mcs)
 
 
 class MitosisSteppable(MitosisSteppableBase):

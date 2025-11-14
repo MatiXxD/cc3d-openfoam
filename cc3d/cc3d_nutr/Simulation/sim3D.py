@@ -171,7 +171,7 @@ params = {
             "contactCM": 30.0,
             "contactCC": 10.0,
             "temp": 30.0,
-            "timesteps": 400,
+            "timesteps": 155,
             "targetVolume": 110,
             "lambdaVolume": 2.0,
             "ratio": 2.0,
