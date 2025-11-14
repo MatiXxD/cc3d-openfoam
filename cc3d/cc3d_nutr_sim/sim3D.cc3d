@@ -1,0 +1,4 @@
+<Simulation version="4.4.1">
+   <PythonScript Type="PythonScript">Simulation/sim3D.py</PythonScript>
+   <Resource Type="Python">Simulation/sim3DSteppables.py</Resource>
+</Simulation>

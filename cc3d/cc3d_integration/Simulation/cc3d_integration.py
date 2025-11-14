@@ -19,7 +19,6 @@ def configure_simulation():
     PottsElmnt.ElementCC3D("Steps",{},"510")
     PottsElmnt.ElementCC3D("Temperature",{},"10.0")
     PottsElmnt.ElementCC3D("NeighborOrder",{},"1")
-
     PluginElmnt=CompuCell3DElmnt.ElementCC3D("Plugin",{"Name":"CellType"})
 
     # Listing all cell types in the simulation
@@ -28,22 +27,19 @@ def configure_simulation():
     PluginElmnt.ElementCC3D("CellType",{"TypeId":"2","TypeName":"cell2"})
 
     CompuCell3DElmnt.ElementCC3D("Plugin",{"Name":"Volume"})
-
     CompuCell3DElmnt.ElementCC3D("Plugin",{"Name":"Surface"})
-
     PluginElmnt_1=CompuCell3DElmnt.ElementCC3D("Plugin",{"Name":"CenterOfMass"})
 
     # Module tracking center of mass of each cell
-
     PluginElmnt_2=CompuCell3DElmnt.ElementCC3D("Plugin",{"Name":"NeighborTracker"})
 
     # Module tracking neighboring cells of each cell
-
     PluginElmnt_4=CompuCell3DElmnt.ElementCC3D("Plugin",{"Name":"BoundaryPixelTracker"})
 
     # Module tracking neighboring cells of each cell
-
     PluginElmnt_3=CompuCell3DElmnt.ElementCC3D("Plugin",{"Name":"Contact"})
+
+
     # Specification of adhesion energies
     PluginElmnt_3.ElementCC3D("Energy",{"Type1":"Medium","Type2":"Medium"},"10.0")
     PluginElmnt_3.ElementCC3D("Energy",{"Type1":"Medium","Type2":"cell1"},"10.0")
