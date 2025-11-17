@@ -1,10 +1,12 @@
-import numpy as np
+from cc3d.cpp import CompuCell
 from cc3d.core.PySteppables import *
+import numpy as np
 import subprocess
 import cell_to_mech
 from cell_to_mech import create_mesh_for_OF
 import clear_openFoam_folder
 from clear_openFoam_folder import copy_and_clean
+import pandas as pd
 
 class ConstraintInitializerSteppable(SteppableBasePy):
     def __init__(self, frequency=1, params={}):
@@ -49,7 +51,7 @@ class GrowthSteppable(SteppableBasePy):
         self.cpp_source = "../cpp_example/main.cpp"          # путь к бинарю (для примера простой cpp код)
         self.dumpfile_cc3d = "dumps/dump_cc3d.txt"    # куда будем писать границу из cc3d
         self.dumpfile_nutr = "dumps/dump_nutr.txt"    # куда будем писать концентрацию нутр
-        self.dumpfile_cpp = "dumps/dump_cpp.txt"      # имя файла, куда будет записан результат обработки
+        self.dumpfile_scv = "field_cc3d.scv"      # имя файла, куда будет записан результат обработки
 
 
 
@@ -90,13 +92,44 @@ class GrowthSteppable(SteppableBasePy):
                         f.write(f"{xc} {yc} {zc} {nutrValue}\n")
             f.write(f"\n\n\n\n\n")
 
+
+    def set_custome_nutr(self, nutrField):
+        df = pd.read_csv("field.csv", sep="\t")
+        nutrField_scv = df['CON'].to_numpy()
+        for x in range(self.dim.x):
+            for y in range(self.dim.y):
+                for z in range(self.dim.z):
+                    # i=x⋅(NY⋅NZ)+y⋅NZ+z
+                    #print(nutrField_scv[x *self.dim.y * self.dim.z + y * self.dim.z + z])
+                    #print(nutrField[x, y, z])
+                    #print()
+                    nutrField[x, y, z] = float(nutrField_scv[x *self.dim.y * self.dim.z + y * self.dim.z + z])
+
+
     def step(self, mcs):
+
         secretor = self.get_field_secretor("nutr")
         nutrField = self.field.nutr
 
-        # print("TEST", mcs)
-        if mcs != 0 and (mcs % self.DUMP_TIME) == 0:
+        # download the nutrient field from OF
+        # download the nutrient field from OF
+        # download the nutrient field from OF
+
+        if mcs % self.DUMP_TIME == 0:
+            self.set_custome_nutr(nutrField)
             print("STEP:", mcs)
+            # for x in range(self.dim.x):
+            #     for y in range(self.dim.y):
+            #         for z in range(self.dim.z):
+            #
+            #             # значение C: внутри сферы — 11, снаружи — 0
+            #             if mcs < 50:
+            #                 r = np.sqrt((x - 32)**2 + (y - 32)**2 + (z - 32)**2)
+            #                 C = 11 if r <= 18 else 0
+            #             else:
+            #                 r = np.sqrt((x - 32)**2 + (y - 32)**2 / 0.5 + (z - 32)**2 / 0.5)
+            #                 C = 11 if r <= 23 else 0
+            #             nutrField[x, y, z] = C#float(nutrField_scv[index])
 
 
 
@@ -107,6 +140,7 @@ class GrowthSteppable(SteppableBasePy):
                 )
                 xc, yc, zc = cell.xCOM, cell.yCOM, cell.zCOM
                 nutrValue = nutrField[xc, yc, zc]
+
 
                 if cell.type == self.CELL:
                     if nutrValue >= self.CONCENTRATION_MAX:
@@ -146,21 +180,17 @@ class GrowthSteppable(SteppableBasePy):
         # OpenFoamPart---OpenFoamPart---OpenFoamPart---OpenFoamPart---OpenFoamPart---OpenFoamPart---OpenFoamPart---
 
         if mcs % self.DUMP_TIME == 0:
-            # blockMesh
+            ## blockMesh
             self._calc_boundary_stub(mcs)
             self._write_nutr_filed(mcs, nutrField)
-            # TO DO:
-            # write file for nutr_value transformation for OF
-            # OF data nutr to CC3D
 
+            ##rabotaet no nado ustanovit openfoam.
+            case_dir = "../OpenFoamProject"
+            subprocess.run(["blockMesh", "-case", case_dir], check=True)
 
-            # rabotaet no nado ustanovit openfoam.
-            # case_dir = "../OpenFoamProject"
-            # subprocess.run(["blockMesh", "-case", case_dir], check=True)
-            #
-            # subprocess.run(["snappyHexMesh", "-overwrite", "-case", case_dir], check=True)
-            # subprocess.run(["pimpleFoamScalar", "-case", case_dir], check=True)
-            # copy_and_clean(mcs)
+            subprocess.run(["snappyHexMesh", "-overwrite", "-case", case_dir], check=True)
+            subprocess.run(["pimpleFoamScalar", "-case", case_dir], check=True)
+            copy_and_clean(mcs)
 
 
 class MitosisSteppable(MitosisSteppableBase):

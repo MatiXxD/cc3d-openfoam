@@ -20,7 +20,7 @@ def configure_simulation(filename, params, proc_num):
     # cellWidth = 7.0
 
     cellCenterX, cellCenterY, cellCenterZ = 32.0, 32.0, 32.0
-    cellRadius = 20.0
+    cellRadius = 14.0
     cellWidth = 5.0
     temp = params["temp"]
 
@@ -165,9 +165,9 @@ def configure_simulation(filename, params, proc_num):
 
 # READ PARAMS
 params = {
-            "nutrFieldValue": 1.5,
-            "initNutrValue": 1.5,
-            "nutrDiffusion": 2.0,
+            "nutrFieldValue": 1.2,
+            "initNutrValue": 1.2,
+            "nutrDiffusion": 0,
             "contactCM": 30.0,
             "contactCC": 10.0,
             "temp": 30.0,
@@ -180,9 +180,9 @@ params = {
             "concentraion_max": 1.1,
             "cellUptake": 0.01,
             "cellUptakeRelative": 0.01,
-            "timeToDeath": 100,
-            "deltaDeath": 0.1,
-            "deltaVolume": 0.3,
+            "timeToDeath": 50,
+            "deltaDeath": 3.1,
+            "deltaVolume": 2.0,
             "critVolume": 150,
             "dump_time": 50,
         }
