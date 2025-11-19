@@ -6,22 +6,24 @@ FoamFile
     object      controlDict;
 }
 
-application     pimpleFoamScalar;
+application     icoFoam;
 
 startFrom       startTime;
 startTime       0;
-stopAt          endTime;
-endTime         2;
 
-deltaT          0.4;
+stopAt          endTime;
+endTime         1;
+
+deltaT          1e-1;
 writeControl    timeStep;
 writeInterval   1;
+
 purgeWrite      0;
+writeFormat     ascii;
+writePrecision  6;
 
 runTimeModifiable true;
 maxCo 0.5;
 adjustTimeStep yes;
-
-
 
 

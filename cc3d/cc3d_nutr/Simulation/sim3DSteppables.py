@@ -5,7 +5,9 @@ import subprocess
 import cell_to_mech
 from cell_to_mech import create_mesh_for_OF
 import clear_openFoam_folder
-from clear_openFoam_folder import copy_and_clean
+from clear_openFoam_folder import copy_last_OF_tms
+from clear_openFoam_folder import clear_OF_project
+from clear_openFoam_folder import write_boundary_for_OFD
 import pandas as pd
 
 class ConstraintInitializerSteppable(SteppableBasePy):
@@ -52,6 +54,10 @@ class GrowthSteppable(SteppableBasePy):
         self.dumpfile_cc3d = "dumps/dump_cc3d.txt"    # куда будем писать границу из cc3d
         self.dumpfile_nutr = "dumps/dump_nutr.txt"    # куда будем писать концентрацию нутр
         self.dumpfile_scv = "field_cc3d.scv"      # имя файла, куда будет записан результат обработки
+        self.OFH_case_dir = "../OpenFoamProject/Hydrodynamic"
+        self.OFD_case_dir = "../OpenFoamProject/Diffusion"
+        self.OFH_dump_dir = "../OF_dumps/H_ts"
+        self.OFD_dump_dir = "../OF_dumps/D_ts"
 
 
 
@@ -66,7 +72,7 @@ class GrowthSteppable(SteppableBasePy):
             pass
 
 
-    def _calc_boundary_stub(self, mcs):
+    def create_cc3d_dump(self, mcs):
         with open(self.dumpfile_cc3d, "w") as f:
             f.write(f"TIMESTEP: {100}\n")
             f.write(f"FORMAT: x y z type\n")
@@ -79,9 +85,9 @@ class GrowthSteppable(SteppableBasePy):
                             cell_type = cell.type
                         f.write(f"{x} {y} {z} {cell_type}\n")
             f.write(f"\n\n\n\n\n")
-        create_mesh_for_OF(mcs)
 
-    def _write_nutr_filed(self, mcs, nutrField):
+
+    def create_nutr_dump(self, mcs, nutrField):
         with open(self.dumpfile_nutr, "w") as f:
             f.write(f"TIMESTEP: {100}\n")
             f.write(f"FORMAT: x y z C_nutr\n")
@@ -100,11 +106,21 @@ class GrowthSteppable(SteppableBasePy):
             for y in range(self.dim.y):
                 for z in range(self.dim.z):
                     # i=x⋅(NY⋅NZ)+y⋅NZ+z
-                    #print(nutrField_scv[x *self.dim.y * self.dim.z + y * self.dim.z + z])
-                    #print(nutrField[x, y, z])
-                    #print()
                     nutrField[x, y, z] = float(nutrField_scv[x *self.dim.y * self.dim.z + y * self.dim.z + z])
 
+    def run_OFH_command(self, mcs):
+        ##rabotaet no nado ustanovit openfoam.
+
+        subprocess.run(["blockMesh", "-case", self.OFH_case_dir], check=True)
+        subprocess.run(["snappyHexMesh", "-overwrite", "-case", self.OFH_case_dir], check=True)
+        subprocess.run(["icoFoam", "-case", self.OFH_case_dir], check=True)
+
+    def run_OFD_command(self, mcs):
+        subprocess.run(["blockMesh", "-case", self.OFD_case_dir], check=True)
+        write_boundary_for_OFD("../OpenFoamProject/D_boundary", self.OFD_case_dir + "/constant/polyMesh/boundary")
+        subprocess.run(["mapFields", "-case", self.OFD_case_dir, self.OFH_case_dir, "-consistent"], check=True)
+        subprocess.run(["topoSet", "-case", self.OFD_case_dir], check=True)
+        subprocess.run(["scalarTransportFoam", "-case", self.OFD_case_dir], check=True)
 
     def step(self, mcs):
 
@@ -179,18 +195,19 @@ class GrowthSteppable(SteppableBasePy):
         # OpenFoamPart---OpenFoamPart---OpenFoamPart---OpenFoamPart---OpenFoamPart---OpenFoamPart---OpenFoamPart---
         # OpenFoamPart---OpenFoamPart---OpenFoamPart---OpenFoamPart---OpenFoamPart---OpenFoamPart---OpenFoamPart---
 
-        if mcs % self.DUMP_TIME == 0:
-            ## blockMesh
-            self._calc_boundary_stub(mcs)
-            self._write_nutr_filed(mcs, nutrField)
+        if mcs > 0 and mcs % self.DUMP_TIME == 0:
+            self.create_cc3d_dump(mcs)
+            create_mesh_for_OF(mcs)
+            self.create_nutr_dump(mcs, nutrField)
+            self.run_OFH_command(mcs)
+            copy_last_OF_tms(mcs, self.OFH_case_dir, self.OFH_dump_dir)
+            self.run_OFD_command(mcs)
+            copy_last_OF_tms(mcs, self.OFD_case_dir, self.OFD_dump_dir)
+            clear_OF_project(mcs, self.OFD_case_dir, self.OFD_dump_dir)
+            clear_OF_project(mcs, self.OFH_case_dir, self.OFH_dump_dir)
 
-            ##rabotaet no nado ustanovit openfoam.
-            case_dir = "../OpenFoamProject"
-            subprocess.run(["blockMesh", "-case", case_dir], check=True)
 
-            subprocess.run(["snappyHexMesh", "-overwrite", "-case", case_dir], check=True)
-            subprocess.run(["pimpleFoamScalar", "-case", case_dir], check=True)
-            copy_and_clean(mcs)
+
 
 
 class MitosisSteppable(MitosisSteppableBase):

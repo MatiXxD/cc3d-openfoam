@@ -1,0 +1,19 @@
+fixedVelocityInSphere
+{
+    type            fixedValue;
+    active          yes;
+
+    selectionMode
+    {
+        type        cellSet;
+        cellSet     sphereCells;
+    }
+
+    fieldValues
+    (
+        {
+            field   U;
+            value   uniform (0 0 0);
+        }
+    );
+}

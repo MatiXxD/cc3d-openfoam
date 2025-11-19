@@ -40,16 +40,10 @@ def create_csv_for_CC3D():
                     r = np.sqrt((xi - cx)**2 + (yi - cy)**2 + (zi - cz)**2)
 
                     # значение C: внутри сферы — 11, снаружи — 0
-                    C = 11 if r <= R else 0
+                    C = 1.7 if r <= R else 0
 
                     writer.writerow([C, xi, yi, zi])
 
     print(f"Файл '{filename}' успешно создан.")
 
-
 create_csv_for_CC3D()
-
-df = pd.read_csv('field.csv', sep="\t")
-
-        #nutrField = self.field.nutr
-nutrField = df['CON'].to_numpy()

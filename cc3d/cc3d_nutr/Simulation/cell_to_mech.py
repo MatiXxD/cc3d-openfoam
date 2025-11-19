@@ -42,11 +42,6 @@ def read_block_lines(file):
 
 
 
-
-
-
-
-
 def write_left_triangles(f, arr, i, j, k):
     f.write(" facet normal " + str(float(1)) + " "+ str(float(0)) + " "+ str(float(0)) + "\n")
     f.write("  outer loop\n")
@@ -201,29 +196,13 @@ def create_mesh_for_OF(time):
 
 
         #with open("/home/softmatter/Documents/CC3D-OF/MAIN/cc3d/cc3d_integration/OpenFoamProject/constant/triSurface/sphere" + str(time) +".stl", "w") as mesh_stl:
-        with open("../OpenFoamProject/constant/triSurface/sphere.stl", "w") as mesh_stl:
+        with open("../OpenFoamProject/Hydrodynamic/constant/triSurface/sphere.stl", "w") as mesh_stl:
             mesh_stl.write("solid Visualization Toolkit generated SLA File\n")
             make_stl_file(mesh_stl, matrix, nx, ny, nz)
             mesh_stl.write("endsolid")
 
-
-
-    # reader = pv.get_reader("/home/softmatter/Documents/CC3D-OF/MAIN/cc3d/cc3d_integration/OpenFoamProject/constant/triSurface/sphere.stl")
-    # mesh = reader.read()
-    #
-    # print(mesh)
-    # normals = mesh.cell_normals
-    # centers = mesh.cell_centers().points
-
-
-
-    # plotter = pv.Plotter()
-    # plotter.add_mesh(mesh, color="lightblue", show_edges=True, opacity=1.0)
-    # plotter.add_arrows(centers, normals, mag=0.2, color='red')
-    # plotter.add_axes()
-    # plotter.save_graphic("mesh_view" + str(time) + ".pdf")
-
-
-
-
+        with open("../OpenFoamProject/Diffusion/constant/triSurface/sphere.stl", "w") as mesh_stl:
+            mesh_stl.write("solid Visualization Toolkit generated SLA File\n")
+            make_stl_file(mesh_stl, matrix, nx, ny, nz)
+            mesh_stl.write("endsolid")
 

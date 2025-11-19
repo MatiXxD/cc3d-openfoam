@@ -18,16 +18,13 @@ gradSchemes
 
 divSchemes
 {
-    div(phi,U)      Gauss linear;
-    div(phi,C)      Gauss upwind;  // если есть скаляр C
     default         none;
+    div(phi,U)      Gauss upwind;
 }
 
 laplacianSchemes
 {
-    default         none;
-    laplacian(DC,C)  Gauss linear corrected;  // для диффузии C
-    laplacian((1|A(U)),p) Gauss linear corrected; // для давления
+    default         Gauss linear corrected;
 }
 
 interpolationSchemes
