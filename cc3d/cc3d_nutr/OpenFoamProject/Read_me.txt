@@ -21,3 +21,26 @@ mapFields /путь/к/старому/кейсу -consistent
 5. Затем 
 topoSet
 6. scalarTransportFoam
+
+
+
+
+в проекте pitzDaily запускаем команду
+foamToVTK -ascii -latestTime
+foamToVTK -case ../OpenFoamProject/Diffusion -ascii -latestTime
+
+появляется папка VTK:
+в нее переносится скрипт toCSV.py
+Итог - файл output.csv
+(поправка нет столбца p, ибо в этом проекте не рассчитывается гидродинамика)
+
+
+
+так, сначала в посчитанной проекте pitzDaily запускаем команду
+postProcess -func writeCellCentres -latestTime
+в последней временной папке появляются 3 файла: Cx, Cy, Cz
+в эту папку закидывает convert_field_to_T_final.py и также файл со значениями из сс3d
+запускаем скрипт и он формирует файл T, его в папку 0
+Проект готов к запуску :)
+
+foamCleanTutorials

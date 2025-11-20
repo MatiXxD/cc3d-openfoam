@@ -2,13 +2,18 @@ from cc3d.cpp import CompuCell
 from cc3d.core.PySteppables import *
 import numpy as np
 import subprocess
-import cell_to_mech
-from cell_to_mech import create_mesh_for_OF
+import fomatters
+from formatters import CC3D_to_OF_stl
+import pandas as pd
+
 import clear_openFoam_folder
 from clear_openFoam_folder import copy_last_OF_tms
 from clear_openFoam_folder import clear_OF_project
 from clear_openFoam_folder import write_boundary_for_OFD
-import pandas as pd
+from clear_openFoam_folder import rename_last_tms
+from clear_openFoam_folder import return_initial_zero_folder
+from clear_openFoam_folder import copy_vtk_folder
+
 
 class ConstraintInitializerSteppable(SteppableBasePy):
     def __init__(self, frequency=1, params={}):
@@ -110,7 +115,7 @@ class GrowthSteppable(SteppableBasePy):
 
     def run_OFH_command(self, mcs):
         ##rabotaet no nado ustanovit openfoam.
-
+        return_initial_zero_folder(self.OFH_case_dir, "../OpenFoamProject/0_Hydro")
         subprocess.run(["blockMesh", "-case", self.OFH_case_dir], check=True)
         subprocess.run(["snappyHexMesh", "-overwrite", "-case", self.OFH_case_dir], check=True)
         subprocess.run(["icoFoam", "-case", self.OFH_case_dir], check=True)
@@ -118,9 +123,17 @@ class GrowthSteppable(SteppableBasePy):
     def run_OFD_command(self, mcs):
         subprocess.run(["blockMesh", "-case", self.OFD_case_dir], check=True)
         write_boundary_for_OFD("../OpenFoamProject/D_boundary", self.OFD_case_dir + "/constant/polyMesh/boundary")
+        rename_last_tms(self.OFH_case_dir)
+
         subprocess.run(["mapFields", "-case", self.OFD_case_dir, self.OFH_case_dir, "-consistent"], check=True)
         subprocess.run(["topoSet", "-case", self.OFD_case_dir], check=True)
         subprocess.run(["scalarTransportFoam", "-case", self.OFD_case_dir], check=True)
+        copy_last_OF_tms(mcs, self.OFD_case_dir, self.OFD_dump_dir)
+        #make vtk of lst tmst
+        subprocess.run(["foamToVTK", "-case", self.OFD_case_dir, "-ascii", "-latestTime"], check=True)
+        copy_vtk_folder(mcs, self.OFD_case_dir, self.OFD_dump_dir)
+        ## new nutr_field in stl format
+        # vtk_to_stl(filename)
 
     def step(self, mcs):
 
@@ -197,12 +210,13 @@ class GrowthSteppable(SteppableBasePy):
 
         if mcs > 0 and mcs % self.DUMP_TIME == 0:
             self.create_cc3d_dump(mcs)
-            create_mesh_for_OF(mcs)
+            CC3D_to_OF_stl(mcs)
             self.create_nutr_dump(mcs, nutrField)
             self.run_OFH_command(mcs)
             copy_last_OF_tms(mcs, self.OFH_case_dir, self.OFH_dump_dir)
             self.run_OFD_command(mcs)
-            copy_last_OF_tms(mcs, self.OFD_case_dir, self.OFD_dump_dir)
+
+        if mcs > 0 and mcs % self.DUMP_TIME == 1:
             clear_OF_project(mcs, self.OFD_case_dir, self.OFD_dump_dir)
             clear_OF_project(mcs, self.OFH_case_dir, self.OFH_dump_dir)
 
