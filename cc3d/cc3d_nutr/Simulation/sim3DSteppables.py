@@ -2,18 +2,21 @@ from cc3d.cpp import CompuCell
 from cc3d.core.PySteppables import *
 import numpy as np
 import subprocess
-import fomatters
+import formatters
 from formatters import CC3D_to_OF_stl
+from formatters import vtk_to_stl
 import pandas as pd
+import matplotlib.pyplot as plt
+import openFoam_commands
+from openFoam_commands import copy_last_OF_tms
+from openFoam_commands import clear_OF_project
+from openFoam_commands import write_boundary_for_OFD
+from openFoam_commands import rename_last_tms
+from openFoam_commands import return_initial_zero_folder
+from openFoam_commands import copy_vtk_folder
 
-import clear_openFoam_folder
-from clear_openFoam_folder import copy_last_OF_tms
-from clear_openFoam_folder import clear_OF_project
-from clear_openFoam_folder import write_boundary_for_OFD
-from clear_openFoam_folder import rename_last_tms
-from clear_openFoam_folder import return_initial_zero_folder
-from clear_openFoam_folder import copy_vtk_folder
-
+import convert_field_to_T_final
+from convert_field_to_T_final import make_T_file_for_OFD
 
 class ConstraintInitializerSteppable(SteppableBasePy):
     def __init__(self, frequency=1, params={}):
@@ -58,9 +61,10 @@ class GrowthSteppable(SteppableBasePy):
         self.cpp_source = "../cpp_example/main.cpp"          # путь к бинарю (для примера простой cpp код)
         self.dumpfile_cc3d = "dumps/dump_cc3d.txt"    # куда будем писать границу из cc3d
         self.dumpfile_nutr = "dumps/dump_nutr.txt"    # куда будем писать концентрацию нутр
-        self.dumpfile_scv = "field_cc3d.scv"      # имя файла, куда будет записан результат обработки
+        self.dumpfile_csv = "field_cc3d.csv"      # имя файла, куда будет записан результат обработки
         self.OFH_case_dir = "../OpenFoamProject/Hydrodynamic"
         self.OFD_case_dir = "../OpenFoamProject/Diffusion"
+        self.OFD_case_dir_build = "../OpenFoamProject/BuilderForDiffusion"
         self.OFH_dump_dir = "../OF_dumps/H_ts"
         self.OFD_dump_dir = "../OF_dumps/D_ts"
 
@@ -104,14 +108,52 @@ class GrowthSteppable(SteppableBasePy):
             f.write(f"\n\n\n\n\n")
 
 
-    def set_custome_nutr(self, nutrField):
-        df = pd.read_csv("field.csv", sep="\t")
-        nutrField_scv = df['CON'].to_numpy()
-        for x in range(self.dim.x):
-            for y in range(self.dim.y):
-                for z in range(self.dim.z):
-                    # i=x⋅(NY⋅NZ)+y⋅NZ+z
-                    nutrField[x, y, z] = float(nutrField_scv[x *self.dim.y * self.dim.z + y * self.dim.z + z])
+    def set_custome_nutr(self, nutrField, mcs):
+        if mcs == 0:
+            df = pd.read_csv("dumps/nutr_field.csv", sep="\t")
+            nutrField_csv = df['CON'].to_numpy()
+            for x in range(self.dim.x):
+                for y in range(self.dim.y):
+                    for z in range(self.dim.z):
+                        # i=x⋅(NY⋅NZ)+y⋅NZ+z
+                        nutrField[x, y, z] = float(nutrField_csv[x *self.dim.y * self.dim.z + y * self.dim.z + z])
+            values = df['CON'].to_numpy().reshape((64, 64, 64))
+            cx = 31
+            cy = 31
+            cz = 31
+            fig, axes = plt.subplots(1, 3, figsize=(15, 5))
+            im0 = axes[0].imshow(values[cx, :, :], origin='lower')
+            im1 = axes[1].imshow(values[:, cy, :], origin='lower')
+            im2 = axes[2].imshow(values[:, :, cz], origin='lower')
+            fig.colorbar(im0, ax=axes[0])
+            fig.colorbar(im1, ax=axes[1])
+            fig.colorbar(im2, ax=axes[2])
+            plt.tight_layout()
+            plt.savefig(str(mcs) +".pdf")
+            plt.close(fig)
+
+        else:
+            df = pd.read_csv("dumps/new_nutr_field.csv")
+            nutrField_csv = df['CON'].to_numpy()
+            for x in range(self.dim.x):
+                for y in range(self.dim.y):
+                    for z in range(self.dim.z):
+                        # i=x⋅(NY⋅NZ)+y⋅NZ+z
+                        nutrField[x, y, z] = float(nutrField_csv[x *self.dim.y * self.dim.z + y * self.dim.z + z])
+            values = df['CON'].to_numpy().reshape((64, 64, 64))
+            cx = 31
+            cy = 31
+            cz = 31
+            fig, axes = plt.subplots(1, 3, figsize=(15, 5))
+            im0 = axes[0].imshow(values[cx, :, :], origin='lower')
+            im1 = axes[1].imshow(values[:, cy, :], origin='lower')
+            im2 = axes[2].imshow(values[:, :, cz], origin='lower')
+            fig.colorbar(im0, ax=axes[0])
+            fig.colorbar(im1, ax=axes[1])
+            fig.colorbar(im2, ax=axes[2])
+            plt.tight_layout()
+            plt.savefig(str(mcs) +".pdf")
+            plt.close(fig)
 
     def run_OFH_command(self, mcs):
         ##rabotaet no nado ustanovit openfoam.
@@ -119,6 +161,26 @@ class GrowthSteppable(SteppableBasePy):
         subprocess.run(["blockMesh", "-case", self.OFH_case_dir], check=True)
         subprocess.run(["snappyHexMesh", "-overwrite", "-case", self.OFH_case_dir], check=True)
         subprocess.run(["icoFoam", "-case", self.OFH_case_dir], check=True)
+
+
+
+
+
+    def build_OFD_project(self, mcs, dump):
+
+        subprocess.run(["blockMesh", "-case", self.OFD_case_dir_build], check=True)
+        write_boundary_for_OFD("../OpenFoamProject/D_boundary", self.OFD_case_dir_build + "/constant/polyMesh/boundary")
+        subprocess.run(["mapFields", "-case", self.OFD_case_dir_build, self.OFH_case_dir, "-consistent"], check=True)
+        subprocess.run(["topoSet", "-case", self.OFD_case_dir_build], check=True)
+        subprocess.run(["scalarTransportFoam", "-case", self.OFD_case_dir_build], check=True)
+        #                   postProcess -func    writeCellCentres   -latestTime     -case ../OpenFoamProject/BuilderForDiffusion
+        subprocess.run(["postProcess", "-func", "writeCellCentres", "-latestTime", "-case", self.OFD_case_dir_build], check=True)
+        make_T_file_for_OFD(mcs, dump)
+        write_boundary_for_OFD("T", self.OFD_case_dir + "/0/T")
+
+
+
+
 
     def run_OFD_command(self, mcs):
         subprocess.run(["blockMesh", "-case", self.OFD_case_dir], check=True)
@@ -133,7 +195,7 @@ class GrowthSteppable(SteppableBasePy):
         subprocess.run(["foamToVTK", "-case", self.OFD_case_dir, "-ascii", "-latestTime"], check=True)
         copy_vtk_folder(mcs, self.OFD_case_dir, self.OFD_dump_dir)
         ## new nutr_field in stl format
-        # vtk_to_stl(filename)
+        vtk_to_stl(self.OFD_dump_dir + str(mcs) + "/VTK/Diffusion_14.vtk",        "dumps/new_nutr_field.csv")
 
     def step(self, mcs):
 
@@ -143,23 +205,11 @@ class GrowthSteppable(SteppableBasePy):
         # download the nutrient field from OF
         # download the nutrient field from OF
         # download the nutrient field from OF
+        print("STEP:", mcs)
 
         if mcs % self.DUMP_TIME == 0:
-            self.set_custome_nutr(nutrField)
+            self.set_custome_nutr(nutrField, mcs)
             print("STEP:", mcs)
-            # for x in range(self.dim.x):
-            #     for y in range(self.dim.y):
-            #         for z in range(self.dim.z):
-            #
-            #             # значение C: внутри сферы — 11, снаружи — 0
-            #             if mcs < 50:
-            #                 r = np.sqrt((x - 32)**2 + (y - 32)**2 + (z - 32)**2)
-            #                 C = 11 if r <= 18 else 0
-            #             else:
-            #                 r = np.sqrt((x - 32)**2 + (y - 32)**2 / 0.5 + (z - 32)**2 / 0.5)
-            #                 C = 11 if r <= 23 else 0
-            #             nutrField[x, y, z] = C#float(nutrField_scv[index])
-
 
 
         for cell in self.cell_list:
@@ -208,12 +258,13 @@ class GrowthSteppable(SteppableBasePy):
         # OpenFoamPart---OpenFoamPart---OpenFoamPart---OpenFoamPart---OpenFoamPart---OpenFoamPart---OpenFoamPart---
         # OpenFoamPart---OpenFoamPart---OpenFoamPart---OpenFoamPart---OpenFoamPart---OpenFoamPart---OpenFoamPart---
 
-        if mcs > 0 and mcs % self.DUMP_TIME == 0:
+        if mcs > 0 and mcs % self.DUMP_TIME == self.DUMP_TIME-1:
             self.create_cc3d_dump(mcs)
             CC3D_to_OF_stl(mcs)
             self.create_nutr_dump(mcs, nutrField)
             self.run_OFH_command(mcs)
             copy_last_OF_tms(mcs, self.OFH_case_dir, self.OFH_dump_dir)
+            self.build_OFD_project(mcs, self.DUMP_TIME)
             self.run_OFD_command(mcs)
 
         if mcs > 0 and mcs % self.DUMP_TIME == 1:

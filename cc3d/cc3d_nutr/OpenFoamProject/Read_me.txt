@@ -4,6 +4,11 @@
 
 Порядок запуска, прям также прописывать всё в терминале 
 
+blockMesh -case ../OpenFoamProject/Hydrodynamic
+snappyHexMesh -overwrite -case ../OpenFoamProject/Hydrodynamic
+icoFoam -case ../OpenFoamProject/Hydrodynamic
+foamCleanTutorials -case ../OpenFoamProject/Hydrodynamic
+
 1. blockMesh 
 2. snappyHexMesh -overwrite
 3. icoFoam 
@@ -23,7 +28,8 @@ topoSet
 6. scalarTransportFoam
 
 
-
+blockMesh -case ../OpenFoamProject/Diffusion
+mapFields -case ../OpenFoamProject/Diffusion ../OpenFoamProject/Hydrodynamic -consistent
 
 в проекте pitzDaily запускаем команду
 foamToVTK -ascii -latestTime
@@ -38,9 +44,18 @@ foamToVTK -case ../OpenFoamProject/Diffusion -ascii -latestTime
 
 так, сначала в посчитанной проекте pitzDaily запускаем команду
 postProcess -func writeCellCentres -latestTime
+postProcess -func writeCellCentres -latestTime -case ../OpenFoamProject/BuilderForDiffusion
 в последней временной папке появляются 3 файла: Cx, Cy, Cz
 в эту папку закидывает convert_field_to_T_final.py и также файл со значениями из сс3d
 запускаем скрипт и он формирует файл T, его в папку 0
 Проект готов к запуску :)
+
+blockMesh -case ../OpenFoamProject/BuilderForDiffusion
+mapFields -case ../OpenFoamProject/BuilderForDiffusion ../OpenFoamProject/Hydrodynamic -consistent
+topoSet -case ../OpenFoamProject/BuilderForDiffusion
+scalarTransportFoam -case ../OpenFoamProject/BuilderForDiffusion
+
+postProcess -func writeCellCentres -latestTime -case ../OpenFoamProject/BuilderForDiffusion
+python3 convert_field_to_T_final.py
 
 foamCleanTutorials

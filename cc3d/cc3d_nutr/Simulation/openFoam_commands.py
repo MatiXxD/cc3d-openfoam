@@ -120,7 +120,7 @@ def write_boundary_for_OFD(source, target):
     # Копируем под новым именем
     shutil.copy2(src, dst)
 
-copy_vtk_folder(50, "../OpenFoamProject/Diffusion", "../OF_dumps/D_ts")
+#copy_vtk_folder(50, "../OpenFoamProject/Diffusion", "../OF_dumps/D_ts")
 #return_initial_zero_folder("../OpenFoamProject/Hydrodynamic", "../OpenFoamProject/0_Hydro")
 #rename_last_tms("../OpenFoamProject/Hydrodynamic")
 # write_boundary_for_OFD("/home/softmatter/Documents/CC3D-OF/MAIN/cc3d/cc3d_nutr/OpenFoamProject/chto_nado_vstavit",

@@ -18,7 +18,7 @@ def upscale_stl_to_64(filename, out_filename):
 
     # === 1. Загружаем данные ===
     min_val=18
-    max_val=82
+    max_val=81
     new_n=64
 
     df = pd.read_csv(filename)
@@ -71,9 +71,9 @@ def upscale_stl_to_64(filename, out_filename):
     # === 7. Готовим DataFrame ===
     df_new = pd.DataFrame({
         "CON": new_CON,
-        "Points:0": points_new[:, 0],
-        "Points:1": points_new[:, 1],
-        "Points:2": points_new[:, 2],
+        "Points:0": points_new[:, 0]-min_val,
+        "Points:1": points_new[:, 1]-min_val,
+        "Points:2": points_new[:, 2]-min_val,
         "U:0": new_U0,
         "U:1": new_U1,
         "U:2": new_U2
@@ -341,6 +341,11 @@ def CC3D_to_OF_stl(time):
             make_stl_file(mesh_stl, matrix, nx, ny, nz)
             mesh_stl.write("endsolid")
 
-vtk_to_stl("/home/softmatter/Documents/CC3D-OF/MAIN/cc3d/cc3d_nutr/OF_dumps/D_ts50/VTK/Diffusion_14.vtk", "dumps/new_nutr_field.csv")
+        with open("../OpenFoamProject/BuilderForDiffusion/constant/triSurface/sphere.stl", "w") as mesh_stl:
+            mesh_stl.write("solid Visualization Toolkit generated SLA File\n")
+            make_stl_file(mesh_stl, matrix, nx, ny, nz)
+            mesh_stl.write("endsolid")
+
+vtk_to_stl("/home/softmatter/Documents/CC3D-OF/MAIN/cc3d/cc3d_nutr/OF_dumps/D_ts49/VTK/Diffusion_14.vtk", "dumps/new_nutr_field.csv")
 #vtk_to_stl("/home/softmatter/Documents/CC3D-OF/MAIN/cc3d/cc3d_nutr/OF_dumps/D_ts50/VTK/Diffusion_14.vtk")
 

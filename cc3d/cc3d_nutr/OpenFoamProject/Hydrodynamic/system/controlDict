@@ -12,7 +12,7 @@ startFrom       startTime;
 startTime       0;
 
 stopAt          endTime;
-endTime         1;
+endTime         0.4;
 
 deltaT          1e-1;
 writeControl    timeStep;

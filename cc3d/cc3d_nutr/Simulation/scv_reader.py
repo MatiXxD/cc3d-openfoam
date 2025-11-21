@@ -1,5 +1,5 @@
 import pandas as pd
-
+import matplotlib.pyplot as plt
 import numpy as np
 import csv
 
@@ -46,4 +46,28 @@ def create_csv_for_CC3D():
 
     print(f"Файл '{filename}' успешно создан.")
 
-create_csv_for_CC3D()
+df = pd.read_csv("dumps/new_nutr_field.csv")
+nutrField_csv = df['CON'].to_numpy()
+print(nutrField_csv)
+values = df["CON"].to_numpy().reshape((64, 64, 64))
+
+
+cx = 31
+cy = 31
+cz = 31
+
+fig, axes = plt.subplots(1, 3, figsize=(15, 5))
+
+im0 = axes[0].imshow(values[cx, :, :], origin='lower')
+im1 = axes[1].imshow(values[:, cy, :], origin='lower')
+im2 = axes[2].imshow(values[:, :, cz], origin='lower')
+
+fig.colorbar(im0, ax=axes[0])
+fig.colorbar(im1, ax=axes[1])
+fig.colorbar(im2, ax=axes[2])
+
+
+plt.tight_layout()
+
+plt.savefig("asdf.pdf")
+plt.close(fig)
