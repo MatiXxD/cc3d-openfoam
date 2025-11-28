@@ -19,8 +19,18 @@ def configure_simulation():
     PottsElmnt.ElementCC3D("Steps",{},"10000")
     PottsElmnt.ElementCC3D("Temperature",{},"10.0")
     PottsElmnt.ElementCC3D("NeighborOrder",{},"1")
-    
     PluginElmnt=CompuCell3DElmnt.ElementCC3D("Plugin",{"Name":"CellType"})
+
+    #"nutrFieldValue": 10.0,            "initNutrValue": 1.1,             "nutrDiffusion": 2.0,
+    DiffusionFieldElmnt = SteppableElmnt.ElementCC3D("DiffusionField", {"Name": "nutr"})
+    DiffusionDataElmnt = DiffusionFieldElmnt.ElementCC3D("DiffusionData")
+    DiffusionDataElmnt.ElementCC3D("FieldName", {}, "nutr")
+    DiffusionDataElmnt.ElementCC3D("GlobalDiffusionConstant", {}, f"{2}")
+    DiffusionDataElmnt.ElementCC3D("GlobalDecayConstant", {}, f"{0}")
+    # Additional options are:
+    DiffusionDataElmnt.ElementCC3D(
+        "InitialConcentrationExpression", {}, f"{40}"
+    )
     
     # Listing all cell types in the simulation
     PluginElmnt.ElementCC3D("CellType",{"TypeId":"0","TypeName":"Medium"})

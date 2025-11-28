@@ -1,0 +1,30 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      topoSetDict;
+}
+
+
+
+actions
+(
+    {
+        name    sphereFaces;
+        type    faceSet;
+        action  new;
+        source  surfaceToCell;
+        sourceInfo
+        {
+            file "../OpenFoamProject/Diffusion/constant/triSurface/sphere.stl";
+            outsidePoints ((-15 -15 83)); // координаты точки внутри сферы - замените на ваши
+            curvature 1e-3;
+            includeCut true;
+            includeInside true;
+            includeOutside false;
+            nearDistance 1e-9;
+        }
+    }
+    
+);

@@ -1,0 +1,88 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      snappyHexMeshDict;
+}
+
+castellatedMesh true;
+snap            true;
+addLayers       false;
+
+geometry
+{
+    sphere
+    {
+        type triSurfaceMesh;
+        file "sphere.stl";  // Файл должен быть в constant/triSurface
+    }
+}
+
+castellatedMeshControls
+{
+    maxLocalCells        1000000;
+    maxGlobalCells       5000000;
+    minRefinementCells   0;
+    nCellsBetweenLevels  3;
+
+    features ();  // Если у sphere.stl нет explicit edge features
+
+    refinementSurfaces
+    {
+        sphere
+        {
+            level (2 2);       // Увеличил для более точной поверхности
+            faceType wall;
+           
+        }
+    }
+
+    refinementRegions
+    {
+        sphere
+        {
+            mode inside;
+            levels ((3 3));    // Увеличил для внутренней части
+        }
+    }
+
+    resolveFeatureAngle 30;
+
+    locationInMesh (-15 83 83); // Убедись, что вне сферы, внутри куба
+    allowFreeStandingZoneFaces true;
+}
+snapControls
+{
+    nSmoothPatch 3;
+    tolerance    2.0;
+    nSolveIter   30;
+    nRelaxIter   5;
+}
+
+meshQualityControls
+{
+    maxNonOrtho          65;
+    maxBoundarySkewness 20;
+    maxInternalSkewness 4;
+    maxConcave           80;
+    minVol               1e-13;
+    minTetQuality        1e-30;
+    minArea              -1;
+    minTwist             0.02;
+    minDeterminant       0.001;
+    minFaceWeight        0.02;
+    minVolRatio          0.01;
+    minTriangleTwist     -1;
+    nSmoothScale         4;
+    errorReduction       0.75;
+}
+
+writeFlags
+(
+    scalarLevels
+    layerSets
+    layerFields
+);
+
+mergeTolerance 1e-6;

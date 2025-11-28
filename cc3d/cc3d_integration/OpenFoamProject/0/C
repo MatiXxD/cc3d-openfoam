@@ -1,0 +1,36 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    object      C;
+}
+
+dimensions      [0 -3 0 0 1 0 0];   // безразмерная температура (или концентрация)
+internalField   uniform 0;
+
+boundaryField
+{
+    inlet
+    
+{
+    type inletOutlet;
+    inletValue uniform 1;   // значение скаляра на входе
+    value uniform 0;         // значение по умолчанию (если поток наружу)
+    
+}
+   
+    outlet
+    {
+        type zeroGradient;
+    }
+    sides
+    {
+        type zeroGradient;
+    }
+    sphere
+    {
+        type zeroGradient;
+    }
+}
+
