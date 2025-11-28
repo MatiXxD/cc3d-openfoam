@@ -1,7 +1,7 @@
 import shutil
 from pathlib import Path
 import os
-
+import matplotlib.pyplot as plt
 def copy_vtk_folder(msc, path_OF_project, path_OF_dump):
     # Исходная директория OpenFOAM-кейса
     src_case = Path(path_OF_project)/"VTK"
@@ -18,7 +18,7 @@ def copy_vtk_folder(msc, path_OF_project, path_OF_dump):
 def return_initial_zero_folder(path_OF_project, path_zero_folder):
     dst_case = Path(path_OF_project)
     src = Path(path_zero_folder)
-    dst =dst_case / "0"
+    dst = dst_case / "0"
     # Удаляем папку '0'
     if dst.exists() and dst.is_dir():
         shutil.rmtree(dst)
@@ -120,10 +120,23 @@ def write_boundary_for_OFD(source, target):
     # Копируем под новым именем
     shutil.copy2(src, dst)
 
-#copy_vtk_folder(50, "../OpenFoamProject/Diffusion", "../OF_dumps/D_ts")
-#return_initial_zero_folder("../OpenFoamProject/Hydrodynamic", "../OpenFoamProject/0_Hydro")
-#rename_last_tms("../OpenFoamProject/Hydrodynamic")
-# write_boundary_for_OFD("/home/softmatter/Documents/CC3D-OF/MAIN/cc3d/cc3d_nutr/OpenFoamProject/chto_nado_vstavit",
-#                        "/home/softmatter/Documents/CC3D-OF/MAIN/cc3d/cc3d_nutr/OpenFoamProject/Diffusion/constant/polyMesh/boundary")
 
 
+def plot_nutr_field(df, mcs):
+    values = df['CON'].to_numpy().reshape((64, 64, 64))
+    cx = 31
+    cy = 31
+    cz = 31
+    fig, axes = plt.subplots(1, 3, figsize=(15, 5))
+    im0 = axes[0].imshow(values[cx, :, :], origin='lower')
+    im1 = axes[1].imshow(values[:, cy, :], origin='lower')
+    im2 = axes[2].imshow(values[:, :, cz], origin='lower')
+    axes[0].set_title("YZ")
+    axes[1].set_title("XZ")
+    axes[2].set_title("XY")
+    fig.colorbar(im0, ax=axes[0])
+    fig.colorbar(im1, ax=axes[1])
+    fig.colorbar(im2, ax=axes[2])
+    plt.tight_layout()
+    plt.savefig("Ris/" + str(mcs) +".pdf")
+    plt.close(fig)
