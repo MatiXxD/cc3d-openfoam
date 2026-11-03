@@ -1,3 +1,4 @@
 1. blockMesh
 2. snappyHexMesh -overwrite
 3. pimpleFoamScalar
+4. foamToVTK -latestTime
